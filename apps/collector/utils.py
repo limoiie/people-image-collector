@@ -1,3 +1,6 @@
+import shutil
+import stat
+
 import numpy
 import face_recognition
 from PIL import Image
@@ -39,3 +42,12 @@ def show_image(image, title):
     plt.imshow(image)
     plt.title(title)
     plt.show()
+
+
+def delete_folder(file_path):
+    if os.path.exists(file_path):
+        for file_list in os.walk(file_path):
+            for name in file_list[2]:
+                os.chmod(os.path.join(file_list[0], name), stat.S_IWRITE)
+                os.remove(os.path.join(file_list[0], name))
+        shutil.rmtree(file_path)
