@@ -10,17 +10,14 @@ class FaceRecognizerImpl(FaceRecognizer):
         return face_recognition.face_locations(image)
 
     def compare_faces(self, candidate_faces: list, face_to_test: numpy.array):
-        return face_recognition.compare_faces(candidate_faces, face_to_test)
+        encoded_candidate_faces = []
+        for candidate_face in candidate_faces:
+            face_location = [0, candidate_face.shape[1], candidate_face.shape[0], 0]
+            encoded_candidate_faces.append(face_recognition.face_encodings(
+                candidate_face, known_face_locations=[face_location])[0])
 
+        face_location = [0, face_to_test.shape[1], face_to_test.shape[0], 0]
+        encoded_face_to_test = face_recognition.face_encodings(
+            face_to_test, known_face_locations=[face_location])[0]
 
-def test():
-    doctor_path = '../../resources/images/doctor.jpg'
-    image_doctor = face_recognition.load_image_file(doctor_path)
-    impl = FaceRecognizerImpl()
-    locations = impl.extract_face_locations(image_doctor)
-    print(locations)
-
-
-if __name__ == '__main__':
-    test()
-    pass
+        return face_recognition.compare_faces(encoded_candidate_faces, encoded_face_to_test)

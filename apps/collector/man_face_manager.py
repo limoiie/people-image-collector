@@ -1,5 +1,4 @@
-import os
-from datetime import datetime
+import logging
 
 from apps.collector.bean.dao import DAO
 from apps.collector.bean.face_record_bean import *
@@ -19,13 +18,20 @@ class ManFaceManager:
         self.__man_dao = man_dao
         self.__face_recognizer = face_recognizer
         self.__faces_dir = faces_dir
-        os.makedirs(self.__faces_dir)
 
-    def __store_image(self, img: numpy.array):
+        if not os.path.exists(self.__faces_dir):
+            os.makedirs(self.__faces_dir)
+
+    def __store_image(self, subdir: str, img: numpy.array):
         image = Image.fromarray(img)
-        image_path = generate_an_non_exist_file_path(self.__faces_dir, '%s.jpg')
+
+        folder = '%s/%s' % (self.__faces_dir, subdir)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+        image_path = generate_an_non_exist_file_path(folder, '%s.jpg')
         image.save(image_path)
-        return image_path
+        return os.path.abspath(image_path)
 
     def __extract_faces_from_image(self, image: numpy.array):
         faces = list()
@@ -52,19 +58,28 @@ class ManFaceManager:
         # TODO: for now we just use the first face, you may want to use all of the faces
         faces = self.__extract_faces_from_image(image)
         if 0 == len(faces):
+            logging.debug('No face detected')
             return
 
         face = faces[0]
-        stored_img_path = self.__store_image(face)
 
         for man in self.__man_dao.fetch_all():
             if self.__is_face_from_man(man, face):
-                face_record = create_face_record(stored_img_path, datetime.now())
+                stored_img_path = self.__store_image(man.name, face)
+                face_record = create_face_record(stored_img_path, datetime.datetime.now())
                 man.faces.append(face_record)
                 self.__man_dao.update(man)
+
+                logging.info('Face from a known man (name: %s, faces: %d)' % (man.name, len(man.faces)))
                 break
         else:
             new_man = self.__man_dao.create()
-            face_record = create_face_record(stored_img_path, datetime.now())
+            stored_img_path = self.__store_image(new_man.name, face)
+            face_record = create_face_record(stored_img_path, datetime.datetime.now())
             new_man.faces.append(face_record)
             self.__man_dao.insert(new_man)
+
+            logging.info('Face from an unknown man, create a new man (name %s)' % new_man.name)
+
+    def finish(self):
+        self.__man_dao.flush()

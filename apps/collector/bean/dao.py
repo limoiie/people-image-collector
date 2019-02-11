@@ -26,3 +26,7 @@ class DAO(abc.ABC):
     @abc.abstractmethod
     def clear(self):
         pass
+
+    @abc.abstractmethod
+    def flush(self):
+        pass

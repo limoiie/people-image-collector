@@ -3,7 +3,6 @@ import face_recognition
 from PIL import Image
 import uuid
 import os
-import cv2 as cv
 import matplotlib.pyplot as plt
 
 
@@ -29,8 +28,9 @@ def generate_an_non_exist_file_path(folder, file_template):
     while True:
         uuid_string = uuid.uuid4().hex
         file_name = file_template % uuid_string[:16]
-        if not os.path.exists(os.path.join(folder, file_name)):
-            return file_name
+        file_path = os.path.join(folder, file_name)
+        if not os.path.exists(file_path):
+            return file_path
     pass
 
 
@@ -39,11 +39,3 @@ def show_image(image, title):
     plt.imshow(image)
     plt.title(title)
     plt.show()
-
-
-def test():
-    pass
-
-
-if __name__ == '__main__':
-    test()
