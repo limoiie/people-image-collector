@@ -32,6 +32,9 @@ class FaceCollector:
             # frame = face_recognition.load_image_file(image_path)
             if success:
                 self.__processing_frame(frame)
+            else:
+                logging.warning('Cannot get the frame from the camera, '
+                                'make sure you have the permission to access the camera')
             time.sleep(self.__sleep_duration_in_seconds_between_two_processing)
 
         self.__man_face_manager.finish()
